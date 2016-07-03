@@ -1,0 +1,164 @@
+
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+
+path {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1px;
+}
+
+.testPoint {
+    stroke: green;
+    fill: green;
+}
+
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="pathseg.js" type="text/javascript"></script>
+<script src="morph.js" type="text/javascript"></script>
+<script>
+
+    var svgWidth = 600, svgHeight = 600;
+
+    svg = d3.select('body').append('svg')
+   .attr('width',svgWidth)
+   .attr('height',svgHeight)
+   .attr('viewBox','0 0 ' + svgWidth + ' ' + svgHeight)
+   .attr('id', 'dimensionsCircleSVG');
+
+   var group = svg.append('g').attr('transform','translate(300,300)');
+
+   var pathAnimations = [];
+
+   var pathInfo = [{innerRadius:60, outerRadius:80, startAngle:0, endAngle:1.5 * Math.PI},{innerRadius:30, outerRadius:50, startAngle:0,endAngle:Math.PI}];
+
+   var arcs = [];
+
+   var elements = [];
+
+   for (var i = 0; i < 2; i++)
+   {
+       arcs.push(d3.svg.arc()
+           .innerRadius(pathInfo[i].innerRadius)
+           .outerRadius(pathInfo[i].outerRadius)
+           .startAngle(pathInfo[i].startAngle)
+           .endAngle(pathInfo[i].endAngle) );
+
+       elements.push(group.append('path').attr('d',arcs[i]()));
+   }
+
+  function prepareAnimations()
+  {
+      //path that arcs will transform into
+      var tempArc =  d3.svg.arc()
+          .innerRadius(0)
+          .startAngle(0)
+          .endAngle(2 * Math.PI);
+
+      for (var i = 0; i < 2; i++)
+      {
+          pathAnimations.push(getNewMorphInstance());
+
+          var controlPointsArc = pathAnimations[i].getSegmentCoordinates(elements[i]);
+          var controlPointsCircle = calculateControlPointsForArcOnCircle(pathInfo[i],elements[i][0][0].getTotalLength(), pathInfo[i].innerRadius, controlPointsArc);
+
+          //debug test if control are on shape and to see order of points
+          //pathAnimations[i].displayPointArray(controlPointsArc,group,true);
+
+          pathAnimations[i].initialize(4,arcs[i]({}), tempArc({outerRadius:pathInfo[i].innerRadius}), elements[i], {points:controlPointsArc}, {points:controlPointsCircle});
+      }
+  }
+
+  function calculateControlPointsForArcOnCircle(arcInfo, totalLengthArc, circleRadius, controlPointsArc)
+  {
+
+      var controlPointsCircle = [];
+
+      //WARNING due to translation points are centered around (0,0) where above (0,0) y is negative and below is positive
+
+      //going to walk through arc control points and define corresponding control points on circle
+
+      //first point is top left pos of arc, map this to top of circle
+      controlPointsCircle.push({x:0,y:-circleRadius});
+
+      //go CW now bottom left pos
+      controlPointsCircle.push(pointForAngle(arcInfo.endAngle, circleRadius));
+
+      //go CW up
+
+      //want to map point to equal distance on circle, the previous point and this point lie in a straight line so it's easy to calculate the distance
+      //else we would need to traverse the path to get the actual distance
+
+      var dist = distanceBetweenPoints(controlPointsArc[2],controlPointsArc[1]);
+
+      var radianOfDist = (dist / totalLengthArc) * 2 * Math.PI;
+
+      controlPointsCircle.push(pointForAngle(arcInfo.endAngle + radianOfDist, circleRadius));
+
+      //go CW up, same procedure for last point
+      dist = distanceBetweenPoints(controlPointsArc[0],controlPointsArc[3]);
+
+      radianOfDist = (dist / totalLengthArc) * 2 * Math.PI;
+
+      controlPointsCircle.push(pointForAngle(arcInfo.startAngle - radianOfDist, arcInfo.innerRadius));
+
+      return controlPointsCircle;
+  }
+
+  //1st kwadrant starts above (0,0)
+  function pointForAngle(angle, radius)
+  {
+      var p = {x:0,y:0};
+      p.x = Math.cos(angle - 0.5 * Math.PI) * radius;
+      p.y = Math.sin(angle - 0.5 * Math.PI) * radius;
+      return p;
+  }
+
+  function distanceBetweenPoints(p1, p2)
+  {
+      return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+  }
+
+  var currentAni;
+
+  function startTransition()
+  {
+      currentAni = 0;
+      pathAnimations[0].startAnimation(1500,0, 'ease-out',nextAnimationInTransition);
+  }
+
+
+  function nextAnimationInTransition()
+  {
+      currentAni += 1;
+      if (currentAni < pathAnimations.length)
+      {
+          pathAnimations[currentAni].startAnimation(500,0, 'ease-in-out',nextAnimationInTransition);
+      }
+      else
+      {
+          doReverse();
+      }
+  }
+
+  function doReverse()
+  {
+      for (var i = 0; i < 2; i++)
+      {
+           pathAnimations[i].reverse();
+      }
+      startTransition();
+  }
+
+  prepareAnimations();
+
+  setTimeout(startTransition, 1000);
+
+</script>
+</body>
+</html>
