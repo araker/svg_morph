@@ -19,6 +19,7 @@ path {
 </head>
 <body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="d3.js" type="text/javascript"></script>
 <script src="pathseg.js" type="text/javascript"></script>
 <script src="morph.js" type="text/javascript"></script>
 <script>
@@ -64,13 +65,13 @@ path {
       {
           pathAnimations.push(getNewMorphInstance());
 
-          var controlPointsArc = pathAnimations[i].getSegmentCoordinates(elements[i]);
-          var controlPointsCircle = calculateControlPointsForArcOnCircle(pathInfo[i],elements[i][0][0].getTotalLength(), pathInfo[i].innerRadius, controlPointsArc);
+          var controlPointsArc = pathAnimations[i].getSegmentCoordinates(elements[i].node());
+          var controlPointsCircle = calculateControlPointsForArcOnCircle(pathInfo[i],elements[i].node().getTotalLength(), pathInfo[i].innerRadius, controlPointsArc);
 
           //debug test if control are on shape and to see order of points
           //pathAnimations[i].displayPointArray(controlPointsArc,group,true);
 
-          pathAnimations[i].initialize(4,arcs[i]({}), tempArc({outerRadius:pathInfo[i].innerRadius}), elements[i], {points:controlPointsArc}, {points:controlPointsCircle});
+          pathAnimations[i].initialize(4,arcs[i]({}), tempArc({outerRadius:pathInfo[i].innerRadius}), elements[i], controlPointsArc, controlPointsCircle);
       }
   }
 
