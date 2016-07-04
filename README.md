@@ -51,7 +51,7 @@ The algorithm makes sure the relative distances between the points are the same 
 * start the animation
 
 ###minimum code example
-`
+```
 //presumes there is already a svg present in the page and that the path has a class named 'myPath'
 var fromPath = 'M4.898587196589413e-15,-80A80,80 0 1,1 -80,9.797174393178826e-15L-60,7.34788079488412e-15A60,60 0 1,0 3.67394039744206e-15,-60Z',
     toPath = 'M3.061616997868383e-15,-50A50,50 0 0,1 3.061616997868383e-15,50L1.83697019872103e-15,30A30,30 0 0,0 1.83697019872103e-15,-30Z',
@@ -72,7 +72,7 @@ exampleFunction = function()
 {
     console.log("animation finished");
 }
-`
+```
 
 Look at the examples for more elaborate uses
 
